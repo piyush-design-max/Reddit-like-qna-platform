@@ -1,7 +1,7 @@
 from fastapi import status, HTTPException, APIRouter
-from .. import models, schemas, oauth2
+from .. import models, schemas, oauth2, ai
 from ..database import getdb_dependency
-from sqlmodel import select, func
+from sqlmodel import select
 from typing import List, Optional
 
 router = APIRouter(
@@ -16,6 +16,10 @@ router = APIRouter(
 # POST /questions/{id}/vote — upvote/downvote
 # DELETE on your own questions/answers only — ownership enforcement again
 # GET /questions/search?q= — search by keyword
+
+
+
+
 
 @router.post("/")
 def ask_question(question: schemas.askQuestion, db: getdb_dependency, current_user: oauth2.user_dependency):
@@ -44,7 +48,6 @@ def getByID(id: int, db: getdb_dependency, current_user: oauth2.user_dependency)
     question = db.exec(statement).first()
     if not question:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"question with {id} not found")
-
     return question
 
 @router.post("/{id}/answer")
@@ -52,6 +55,7 @@ def answer(answer : schemas.Postanswer,id : int,db : getdb_dependency, current_u
     new_answer = models.Answers(content=answer.content,user_id=current_user.user_id,question_id=id)
     db.add(new_answer)
     db.commit()
+    ai.aicall(id,db)
     return {"Message":"answer submitted"}
 
 @router.delete("/delete",status_code=status.HTTP_204_NO_CONTENT)
