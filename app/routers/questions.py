@@ -30,20 +30,20 @@ def ask_question(question: schemas.askQuestion, db: getdb_dependency, current_us
 
 
 @router.get("/", response_model=List[schemas.Response_question])
-def getallquestions(db: getdb_dependency, current_user: oauth2.user_dependency):
+def getallquestions(db: getdb_dependency):
     statement = select(models.Questions)
     questions = db.exec(statement).all()
     return questions
 
 
 @router.get("/search", response_model=List[schemas.Response_question])
-def search(db : getdb_dependency , current_user : oauth2.user_dependency, q : Optional[str] = ""):
+def search(db : getdb_dependency , q : Optional[str] = ""):
     statement = select(models.Questions).where(models.Questions.title.contains(q))
     questions = db.exec(statement).all()
     return questions
 
 @router.get("/{id}", response_model=schemas.response_questionbyid)
-def getByID(id: int, db: getdb_dependency, current_user: oauth2.user_dependency):
+def getByID(id: int, db: getdb_dependency):
     statement = select(models.Questions).where(models.Questions.question_id == id)
     question = db.exec(statement).first()
     if not question:
